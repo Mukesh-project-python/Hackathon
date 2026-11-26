@@ -1,3 +1,4 @@
+
 export const defaultTutors = [
   {
     id: 1,
@@ -68,7 +69,10 @@ export function getTutors() {
     return JSON.parse(saved);
   }
 
-  localStorage.setItem("htf_tutors", JSON.stringify(defaultTutors));
+  localStorage.setItem(
+    "htf_tutors",
+    JSON.stringify(defaultTutors)
+  );
 
   return defaultTutors;
 }
@@ -78,11 +82,18 @@ export function saveBooking(booking) {
     localStorage.getItem("htf_bookings") || "[]"
   );
 
-  bookings.push({
+  const newBooking = {
     ...booking,
     id: Date.now(),
     status: "Pending"
-  });
+  };
 
-  localStorage.setItem("htf_bookings", JSON.stringify(bookings));
+  bookings.push(newBooking);
+
+  localStorage.setItem(
+    "htf_bookings",
+    JSON.stringify(bookings)
+  );
+
+  return newBooking;
 }

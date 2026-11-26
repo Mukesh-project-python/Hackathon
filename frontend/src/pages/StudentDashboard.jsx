@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getTutors } from "../data/tutors";
 
 function StudentDashboard() {
@@ -12,19 +12,61 @@ function StudentDashboard() {
 
   const [activeTab, setActiveTab] = useState("overview");
 
+  const [bookings, setBookings] = useState(() => {
+    return JSON.parse(
+      localStorage.getItem("htf_bookings") || "[]"
+    );
+  });
+
   const tutors = getTutors();
 
-  const bookings = JSON.parse(
-    localStorage.getItem("htf_bookings") || "[]"
-  );
-
   const myBookings = user
-    ? bookings.filter(b => b.student === user.name)
+    ? bookings.filter(
+        b =>
+          b.studentId === user.id ||
+          (b.studentId === undefined && b.student === user.name)
+      )
     : [];
 
   function logout() {
     localStorage.removeItem("htf_current_user");
     navigate("/signup");
+  }
+
+  function cancelBooking(id) {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this booking?"
+    );
+
+    if (!confirmCancel) return;
+
+    const updatedBookings = bookings.map(b =>
+      b.id === id
+        ? { ...b, status: "Cancelled" }
+        : b
+    );
+
+    setBookings(updatedBookings);
+
+    localStorage.setItem(
+      "htf_bookings",
+      JSON.stringify(updatedBookings)
+    );
+
+    alert("Booking cancelled successfully!");
+  }
+
+  function getStatusClass(status) {
+    switch (status) {
+      case "Approved":
+        return "status-approved";
+      case "Rejected":
+        return "status-rejected";
+      case "Cancelled":
+        return "status-cancelled";
+      default:
+        return "status-pending";
+    }
   }
 
   if (!user || user.role !== "student") {
@@ -131,9 +173,21 @@ function StudentDashboard() {
               <div className="stat-card">
                 <span>⏳</span>
                 <h2>
-                  {myBookings.filter(b => b.status === "Pending").length}
+                  {myBookings.filter(
+                    b => b.status === "Pending"
+                  ).length}
                 </h2>
                 <p>Pending Requests</p>
+              </div>
+
+              <div className="stat-card">
+                <span>✅</span>
+                <h2>
+                  {myBookings.filter(
+                    b => b.status === "Approved"
+                  ).length}
+                </h2>
+                <p>Approved Bookings</p>
               </div>
 
             </div>
@@ -141,9 +195,7 @@ function StudentDashboard() {
             <section className="dashboard-section">
               <div className="section-heading">
                 <h2>Recent Bookings</h2>
-                <button
-                  onClick={() => setActiveTab("bookings")}
-                >
+                <button onClick={() => setActiveTab("bookings")}>
                   View All
                 </button>
               </div>
@@ -166,7 +218,8 @@ function StudentDashboard() {
                       <h3>{b.tutor}</h3>
                       <p>{b.subject} • {b.date}</p>
                     </div>
-                    <span className="status-pending">
+
+                    <span className={getStatusClass(b.status)}>
                       {b.status}
                     </span>
                   </div>
@@ -191,17 +244,30 @@ function StudentDashboard() {
                 </button>
               </div>
             ) : (
-              myBookings.map(b => (
+              myBookings.slice().reverse().map(b => (
                 <div className="dashboard-booking" key={b.id}>
                   <div>
                     <h3>{b.tutor}</h3>
                     <p>Subject: {b.subject}</p>
                     <p>Date: {b.date} | Time: {b.time}</p>
                     <p>Fee: ₹{b.rate}</p>
+                    <p>Location: {b.address}</p>
+
+                    <span className={getStatusClass(b.status)}>
+                      {b.status}
+                    </span>
+
+                    {b.status === "Pending" && (
+                      <div style={{ marginTop: "12px" }}>
+                        <button
+                          className="cancel-btn"
+                          onClick={() => cancelBooking(b.id)}
+                        >
+                          Cancel Booking
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <span className="status-pending">
-                    {b.status}
-                  </span>
                 </div>
               ))
             )}

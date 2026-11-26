@@ -17,6 +17,7 @@ function Signup() {
   const [experience, setExperience] = useState("");
   const [city, setCity] = useState("");
   const [grade, setGrade] = useState("");
+  const [rate, setRate] = useState("");
 
   const navigate = useNavigate();
 
@@ -33,8 +34,13 @@ function Signup() {
         return;
       }
 
-      if (users.some(u => u.email === email)) {
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
         alert("Email already registered. Please login.");
+        return;
+      }
+
+      if (role === "tutor" && Number(rate) <= 0) {
+        alert("Please enter a valid session fee.");
         return;
       }
 
@@ -53,7 +59,7 @@ function Signup() {
               subject,
               experience,
               city,
-              rate: 0
+              rate: Number(rate)
             })
       };
 
@@ -78,7 +84,7 @@ function Signup() {
     } else {
       const user = users.find(
         u =>
-          u.email === email &&
+          u.email.toLowerCase() === email.toLowerCase() &&
           u.password === password &&
           u.role === role
       );
@@ -88,8 +94,18 @@ function Signup() {
         return;
       }
 
+      if (user.role === "tutor" && user.status === "Pending") {
+        alert("Your tutor application is waiting for admin approval.");
+        return;
+      }
+
+      if (user.role === "tutor" && user.status === "Rejected") {
+        alert("Your tutor application was rejected. Please contact the admin.");
+        return;
+      }
+
       if (user.role === "tutor" && user.status !== "Approved") {
-        alert("Your tutor account is awaiting admin approval.");
+        alert("Your tutor account is not approved.");
         return;
       }
 
@@ -275,6 +291,18 @@ function Signup() {
                     value={city}
                     onChange={e => setCity(e.target.value)}
                     placeholder="Enter your city"
+                    required
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <label>Session Fee (₹)</label>
+                  <input
+                    type="number"
+                    value={rate}
+                    onChange={e => setRate(e.target.value)}
+                    placeholder="Enter your session fee"
+                    min="1"
                     required
                   />
                 </div>

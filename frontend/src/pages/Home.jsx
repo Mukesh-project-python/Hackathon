@@ -30,8 +30,26 @@ function Home() {
   });
 
   function handleBooking(data) {
-    saveBooking(data);
+    const user = JSON.parse(
+      localStorage.getItem("htf_current_user") || "null"
+    );
+
+    if (!user || user.role !== "student") {
+      alert("Please login as a student before booking.");
+      setSelectedTutor(null);
+      return;
+    }
+
+    const bookingData = {
+      ...data,
+      studentId: user.id,
+      student: user.name
+    };
+
+    saveBooking(bookingData);
+
     alert("Booking submitted successfully!");
+
     setSelectedTutor(null);
   }
 
